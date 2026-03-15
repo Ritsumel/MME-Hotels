@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Eye, EyeOff, Mail, Lock } from "lucide-react"
@@ -10,15 +11,73 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 
 export function LoginForm() {
+  const router = useRouter()
+
   const [showPassword, setShowPassword] = useState(false)
-  const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
+  const [successMessage, setSuccessMessage] = useState("")
+  const [errorMessage, setErrorMessage] = useState("")
+  const params = useSearchParams()
+  const [isSignUp, setIsSignUp] = useState(params.get("mode") === "register")
 
-  function handleSubmit(e: React.FormEvent) {
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    // Placeholder for future auth integration
+
+    setErrorMessage("")
+    setSuccessMessage("")
+
+    try {
+      const endpoint = isSignUp
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`
+
+      const body = isSignUp
+        ? {
+            fullName: name,
+            email,
+            password
+          }
+        : {
+            email,
+            password
+          }
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      })
+
+      const data = await res.json().catch(() => null)
+
+      if (!res.ok) {
+        setErrorMessage(data.message || "Something went wrong.")
+        return
+      }
+
+      if (isSignUp) {
+        setSuccessMessage("Account created successfully! Redirecting to sign in...")
+
+        setTimeout(() => {
+          setIsSignUp(false)
+          setSuccessMessage("")
+        }, 2000)
+
+        return
+      }
+
+      localStorage.setItem("token", data.access_token)
+
+      router.push("/")
+
+    } catch (err) {
+      setErrorMessage("Unable to connect to the server.")
+    }
   }
 
   return (
@@ -72,6 +131,18 @@ export function LoginForm() {
               ? "Join MME Hotels and unlock exclusive member benefits."
               : "Sign in to your MME Hotels account."}
           </p>
+
+          {successMessage && (
+            <div className="mt-4 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+              {successMessage}
+            </div>
+          )}
+
+          {errorMessage && (
+            <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {errorMessage}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
             {isSignUp && (

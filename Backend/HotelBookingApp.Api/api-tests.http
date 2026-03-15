@@ -1,0 +1,44 @@
+﻿@baseUrl = http://localhost:8000
+
+### LOGIN
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+ADMIN:
+{
+  "username": "admin",
+  "password": "password"
+}
+
+USER:
+{
+  "username": "user",
+  "password": "password"
+}
+
+###
+
+### GET BOOKINGS
+GET {{baseUrl}}/api/bookings
+Authorization: Bearer YOUR_TOKEN_HERE
+
+###
+
+### CREATE BOOKING
+POST {{baseUrl}}/api/bookings
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json
+
+{
+  "hotelId": 1,
+  "guestName": "Michelle Lee",
+  "checkIn": "2026-04-10",
+  "checkOut": "2026-04-12",
+  "guests": 2
+}
+
+###
+
+### DELETE BOOKING
+DELETE {{baseUrl}}/api/bookings/3
+Authorization: Bearer YOUR_TOKEN_HERE

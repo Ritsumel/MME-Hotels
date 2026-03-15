@@ -61,9 +61,23 @@ export function AdminDashboard() {
   })
 
   const checkAuth = useCallback(() => {
-    const isAuth = sessionStorage.getItem("mme-admin-auth")
-    if (!isAuth) {
-      router.push("/admin/login")
+    const token = localStorage.getItem("token")
+
+    if (!token) {
+      router.push("/login")
+      return
+    }
+
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]))
+      const role = payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]
+
+      if (role !== "Admin") {
+        router.push("/")
+      }
+
+    } catch {
+      router.push("/login")
     }
   }, [router])
 
@@ -72,8 +86,8 @@ export function AdminDashboard() {
   }, [checkAuth])
 
   function handleLogout() {
-    sessionStorage.removeItem("mme-admin-auth")
-    router.push("/admin/login")
+    localStorage.removeItem("token")
+    router.push("/")
   }
 
   function handleDeleteHotel() {
