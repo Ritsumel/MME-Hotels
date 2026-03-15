@@ -5,13 +5,26 @@ obj/
 *.user
 *.suo
 
-# ===== Frontend (Node/React) =====
+# ===== SQL Server =====
+*.mdf
+*.ldf
+
+# ===== Frontend (Node / Next.js) =====
 node_modules/
+.next/
 dist/
 build/
 
-# ===== Common =====
+# ===== Environment files =====
 .env
+.env.local
+
+# ===== Logs =====
 *.log
+
+# ===== VS Code =====
+.vscode/
+
+# ===== OS files =====
 .DS_Store
 Thumbs.db
