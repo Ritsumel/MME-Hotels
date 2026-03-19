@@ -1,6 +1,6 @@
 ﻿using Bogus;
 using HotelBookingApp.Api.Models;
-using System.Runtime.CompilerServices;
+
 
 namespace HotelBookingApp.Api.Data;
 
@@ -32,42 +32,84 @@ public static class SeedData
 
         var svenskaStäder = new[]
             {
-                "Stockholm", "Göteborg", "Malmö", "Uppsala", "Västerås",
-                "Örebro", "Linköping", "Helsingborg", "Jönköping", "Norrköping",
-                "Lund", "Umeå", "Gävle", "Borås", "Södertälje",
-                "Eskilstuna", "Halmstad", "Växjö", "Karlstad", "Sundsvall"
+                ("Stockholm", 15),
+                ("Göteborg", 12),
+                ("Malmö", 10),
+                ("Uppsala", 4),
+                ("Västerås", 3),
+                ("Örebro", 3),
+                ("Linköping", 3),
+                ("Helsingborg", 3),
+                ("Jönköping", 2),
+                ("Norrköping", 2),
+                ("Lund", 2),
+                ("Umeå", 2),
+                ("Gävle", 1),
+                ("Borås", 1),
+                ("Södertälje", 1),
+                ("Eskilstuna", 1),
+                ("Halmstad", 1),
+                ("Växjö", 1),
+                ("Karlstad", 1),
+                ("Sundsvall", 1)
             };
 
-        var cities = svenskaStäder.Select(namn => new City
+        var cities = svenskaStäder.Select(s => new City
         {
-            Name = namn,
-            Image = $"https://picsum.photos/seed/{namn}/800/600",
-            UrlSlug = namn.ToLower().Replace("å", "a").Replace("ä", "a").Replace("ö", "o")
+            Name = s.Item1,
+            Image = $"https://picsum.photos/seed/{s.Item1}/800/600",
+            UrlSlug = s.Item1.ToLower().Replace("å", "a").Replace("ä", "a").Replace("ö", "o")
         }).ToList();
 
         context.Cities.AddRange(cities);
         context.SaveChanges();
 
-        var hotelFaker = new Faker<Hotel>("sv")
-            .RuleFor(h => h.Name, (f, h) =>
-            {
-                var stad = f.PickRandom(cities);
-                h.CityId = stad.Id;
-                return stad.Name + " " + f.PickRandom("Hotel", "Resort", "Suites", "Inn", "Lodge");
-            })
-            .RuleFor(h => h.Description, f => f.PickRandom(
+        var viktadStadslista = svenskaStäder
+            .SelectMany(s => Enumerable.Repeat(
+                cities.First(c => c.Name == s.Item1), s.Item2))
+            .ToList();
+
+        var hotelTypes = new[] { "Hotel", "Resort", "Suites", "Inn", "Lodge" };
+        var descriptions = new[]
+        {
                 "Ett modernt hotell med fantastisk utsikt och förstklassig service.",
                 "Beläget i hjärtat av staden med spa, pool och gourmetrestaurang.",
                 "Lyxigt boende med eleganta rum och personlig service dygnet runt.",
                 "Familjevänligt hotell med aktiviteter för både stora och små.",
                 "Boutique-hotell med unik karaktär och ombonad atmosfär."
-             ))
-            .RuleFor(h => h.PricePerNight, f => Math.Round(f.Random.Decimal(500, 4000) / 100) * 100)
-            .RuleFor(h => h.Image, f => $"https://picsum.photos/seed/{f.Random.Word()}/800/600")
-            .RuleFor(h => h.UrlSlug, (f, h) => h.Name.ToLower().Replace(" ", "-"))
-            .RuleFor(h => h.CityId, f => f.PickRandom(cities).Id);
+        };
 
-        var hotels = hotelFaker.Generate(20);
+        var faker = new Faker("sv");
+        var hotels = new List<Hotel>();
+
+        // Steg 1 — garantera minst 1 hotell per stad
+        foreach (var city in cities)
+        {
+            hotels.Add(new Hotel
+            {
+                Name = city.Name + " " + faker.PickRandom(hotelTypes),
+                Description = faker.PickRandom(descriptions),
+                PricePerNight = Math.Round(faker.Random.Decimal(500, 4000) / 100) * 100,
+                Image = $"https://picsum.photos/seed/{faker.Random.Word()}/800/600",
+                UrlSlug = (city.Name + "-" + faker.PickRandom(hotelTypes)).ToLower().Replace(" ", "-"),
+                CityId = city.Id
+            });
+        }
+
+        // Steg 2 — fyll på med extra hotell viktade mot stora städer
+        for (int i = 0; i < 20; i++)
+        {
+            var stad = faker.PickRandom(viktadStadslista);
+            hotels.Add(new Hotel
+            {
+                Name = stad.Name + " " + faker.PickRandom(hotelTypes),
+                Description = faker.PickRandom(descriptions),
+                PricePerNight = Math.Round(faker.Random.Decimal(500, 4000) / 100) * 100,
+                Image = $"https://picsum.photos/seed/{faker.Random.Word()}/800/600",
+                UrlSlug = (stad.Name + "-" + faker.PickRandom(hotelTypes)).ToLower().Replace(" ", "-"),
+                CityId = stad.Id
+            });
+        }
 
         context.Hotels.AddRange(hotels);
         context.SaveChanges();

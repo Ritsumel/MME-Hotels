@@ -21,7 +21,7 @@ public class HotelsController : ControllerBase
     {
         var hotels = _context.Hotels
             .Include(h => h.City)
-            .Select(h => new HotelsDto
+            .Select(h => new HotelDto
             {
                 Id = h.Id,
                 Name = h.Name,
@@ -41,11 +41,22 @@ public class HotelsController : ControllerBase
     {
         var hotel = _context.Hotels
             .Include(h => h.City)
-            .FirstOrDefault(h => h.Id == id);
-        
+            .Where(h => h.Id == id)
+            .Select(h => new HotelDto
+            {
+                Id = h.Id,
+                Name = h.Name,
+                Description = h.Description,
+                PricePerNight = (int)h.PricePerNight,
+                Image = h.Image,
+                UrlSlug = h.UrlSlug,
+                CityName = h.City!.Name
+            })
+            .FirstOrDefault();
+
         if (hotel == null)
             return NotFound();
-        
+
         return Ok(hotel);
     }
 }
