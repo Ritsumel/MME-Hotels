@@ -67,4 +67,122 @@ public class HotelsController : ControllerBase
 
         return Ok(hotel);
     }
+
+    [HttpPost] //Hotels POST
+    public async Task<IActionResult> Create(CreateHotelDto dto)
+    {
+    if (string.IsNullOrWhiteSpace(dto.Name))
+        return BadRequest("Hotel name is required.");
+
+    if (string.IsNullOrWhiteSpace(dto.UrlSlug))
+        return BadRequest("UrlSlug is required.");
+
+    var city = await _context.Cities.FindAsync(dto.CityId);
+    if (city == null)
+        return BadRequest("Invalid CityId. City does not exist.");
+
+    var slugExists = await _context.Hotels.AnyAsync(h => h.UrlSlug == dto.UrlSlug);
+    if (slugExists)
+        return BadRequest("A hotel with this UrlSlug already exists.");
+
+    var hotel = new Models.Hotel
+    {
+        Name = dto.Name,
+        Description = dto.Description,
+        PricePerNight = dto.PricePerNight,
+        Image = dto.Image,
+        UrlSlug = dto.UrlSlug,
+        Address = dto.Address,
+        Rating = dto.Rating,
+        ReviewCount = dto.ReviewCount,
+        Amenities = dto.Amenities,
+        CityId = dto.CityId
+    };
+
+    _context.Hotels.Add(hotel);
+    await _context.SaveChangesAsync();
+
+    var result = new HotelDto
+    {
+        Id = hotel.Id,
+        Name = hotel.Name,
+        Description = hotel.Description,
+        PricePerNight = (int)hotel.PricePerNight,
+        Image = hotel.Image,
+        UrlSlug = hotel.UrlSlug,
+        CityName = city.Name,
+        Address = hotel.Address,
+        Rating = hotel.Rating,
+        ReviewCount = hotel.ReviewCount,
+        Amenities = hotel.Amenities
+    };
+
+    return CreatedAtAction(nameof(GetById), new { id = hotel.Id }, result);
+    }
+
+    [HttpPatch("{id}")] //Hotels UPDATE
+    public async Task<IActionResult> Update(int id, UpdateHotelDto dto)
+    {
+    var hotel = await _context.Hotels.FindAsync(id);
+    if (hotel == null)
+        return NotFound("Hotel not found.");
+
+    if (string.IsNullOrWhiteSpace(dto.Name))
+        return BadRequest("Hotel name is required.");
+
+    if (string.IsNullOrWhiteSpace(dto.UrlSlug))
+        return BadRequest("UrlSlug is required.");
+
+    var city = await _context.Cities.FindAsync(dto.CityId);
+    if (city == null)
+        return BadRequest("Invalid CityId. City does not exist.");
+
+    var slugExists = await _context.Hotels.AnyAsync(h => h.UrlSlug == dto.UrlSlug && h.Id != id);
+    if (slugExists)
+        return BadRequest("Another hotel with this UrlSlug already exists.");
+
+    hotel.Name = dto.Name;
+    hotel.Description = dto.Description;
+    hotel.PricePerNight = dto.PricePerNight;
+    hotel.Image = dto.Image;
+    hotel.UrlSlug = dto.UrlSlug;
+    hotel.Address = dto.Address;
+    hotel.Rating = dto.Rating;
+    hotel.ReviewCount = dto.ReviewCount;
+    hotel.Amenities = dto.Amenities;
+    hotel.CityId = dto.CityId;
+
+    await _context.SaveChangesAsync();
+
+    var result = new HotelDto
+    {
+        Id = hotel.Id,
+        Name = hotel.Name,
+        Description = hotel.Description,
+        PricePerNight = (int)hotel.PricePerNight,
+        Image = hotel.Image,
+        UrlSlug = hotel.UrlSlug,
+        CityName = city.Name,
+        Address = hotel.Address,
+        Rating = hotel.Rating,
+        ReviewCount = hotel.ReviewCount,
+        Amenities = hotel.Amenities
+    };
+
+    return Ok(result);
+    }
+
+    [HttpDelete("{id}")] //Hotels DELETE
+    public async Task<IActionResult> Delete(int id)
+    {
+    var hotel = await _context.Hotels.FindAsync(id);
+    if (hotel == null)
+        return NotFound("Hotel not found.");
+
+    _context.Hotels.Remove(hotel);
+    await _context.SaveChangesAsync();
+
+    return NoContent();
+    }
+
 }

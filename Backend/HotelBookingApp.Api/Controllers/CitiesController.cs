@@ -65,5 +65,94 @@ public class CitiesController : ControllerBase
 
         return Ok(city);
     }
+
+
+    [HttpPost] //City POST
+    public async Task<IActionResult> Create(CreateCityDto dto)
+    {
+    if (string.IsNullOrWhiteSpace(dto.Name))
+        return BadRequest("City name is required.");
+
+    if (string.IsNullOrWhiteSpace(dto.UrlSlug))
+        return BadRequest("UrlSlug is required.");
+
+    var slugExists = await _context.Cities.AnyAsync(c => c.UrlSlug == dto.UrlSlug);
+    if (slugExists)
+        return BadRequest("A city with this UrlSlug already exists.");
+
+    var city = new Models.City
+    {
+        Name = dto.Name,
+        Image = dto.Image,
+        UrlSlug = dto.UrlSlug
+    };
+
+    _context.Cities.Add(city);
+    await _context.SaveChangesAsync();
+
+    var result = new CityDto
+    {
+        Id = city.Id,
+        Name = city.Name,
+        Image = city.Image,
+        UrlSlug = city.UrlSlug
+    };
+
+    return CreatedAtAction(nameof(GetById), new { id = city.Id }, result);
+    }
+
+
+
+    [HttpPatch("{id}")] //City UPDATE
+public async Task<IActionResult> Update(int id, UpdateCityDto dto)
+{
+    var city = await _context.Cities.FindAsync(id);
+    if (city == null)
+        return NotFound("City not found.");
+
+    if (string.IsNullOrWhiteSpace(dto.Name))
+        return BadRequest("City name is required.");
+
+    if (string.IsNullOrWhiteSpace(dto.UrlSlug))
+        return BadRequest("UrlSlug is required.");
+
+    var slugExists = await _context.Cities.AnyAsync(c => c.UrlSlug == dto.UrlSlug && c.Id != id);
+    if (slugExists)
+        return BadRequest("Another city with this UrlSlug already exists.");
+
+    city.Name = dto.Name;
+    city.Image = dto.Image;
+    city.UrlSlug = dto.UrlSlug;
+
+    await _context.SaveChangesAsync();
+
+    var result = new CityDto
+    {
+        Id = city.Id,
+        Name = city.Name,
+        Image = city.Image,
+        UrlSlug = city.UrlSlug
+    };
+
+    return Ok(result);
+    }
+
+    [HttpDelete("{id}")] //City DELETE (blockeras om en stad är kopplat till ett hotell)
+public async Task<IActionResult> Delete(int id)
+{
+    var city = await _context.Cities.FindAsync(id);
+    if (city == null)
+        return NotFound("City not found.");
+
+    var hasHotels = await _context.Hotels.AnyAsync(h => h.CityId == id);
+    if (hasHotels)
+        return BadRequest("Cannot delete city because it has hotels linked to it.");
+
+    _context.Cities.Remove(city);
+    await _context.SaveChangesAsync();
+
+    return NoContent();
+}
+
 }
 
