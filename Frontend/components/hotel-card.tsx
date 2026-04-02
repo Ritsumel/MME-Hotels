@@ -15,10 +15,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import type { Hotel } from '@/lib/hotel-data';
+import type { Hotel, Room } from '@/lib/hotel-data';
 
 interface HotelCardProps {
   hotel: Hotel;
+  rooms: Room[];
   checkIn: string;
   checkOut: string;
   guests: string;
@@ -26,14 +27,14 @@ interface HotelCardProps {
 
 export function HotelCard({
   hotel,
+  rooms,
   checkIn,
   checkOut,
   guests,
 }: HotelCardProps) {
-  /* Aktivera när Room-Model finns i backend */
-  /*const [selectedRoom, setSelectedRoom] = useState<Room | null>(null); 
+    const [selectedRoom, setSelectedRoom] = useState<Room | null>(null); 
     const [showBooking, setShowBooking] = useState(false);
-    const [isBooked, setIsBooked] = useState(false); */
+    const [isBooked, setIsBooked] = useState(false); 
 
   const nights =
     checkIn && checkOut
@@ -46,15 +47,14 @@ export function HotelCard({
         )
       : 1;
 
-  /* Lägg till när Room-Model finns i backend */
-  /*   function handleBook() {
+   function handleBook() {
     setIsBooked(true);
     setTimeout(() => {
       setShowBooking(false);
       setIsBooked(false);
       setSelectedRoom(null);
     }, 2000);
-  } */
+  }
 
   return (
     <>
@@ -108,149 +108,160 @@ export function HotelCard({
             </div>
 
             <Separator className='my-4' />
+            <div className='flex flex-col gap-3'>
+  <p className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+    Available Rooms
+  </p>
 
-            {/* Rumssektion — aktivera när Room-model finns i backend */}
-            {/*  <div className='flex flex-col gap-3'>
-              <p className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                Available Rooms
+  {rooms.length === 0 ? (
+    <p className='text-sm text-muted-foreground'>
+      No rooms available for this hotel yet.
+    </p>
+  ) : (
+    rooms
+      .filter((room) => room.isAvailable)
+      .map((room) => (
+        <div
+          key={room.id}
+          className='flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-background p-3'
+        >
+          <div className='flex-1'>
+            <h4 className='text-sm font-semibold text-foreground'>
+              {room.name}
+            </h4>
+
+            <div className='mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground'>
+              {room.roomType && <span>{room.roomType}</span>}
+              <span className='flex items-center gap-1'>
+                <Users className='h-3 w-3' />
+                Up to {room.capacity}
+              </span>
+            </div>
+
+            {room.description && (
+              <p className='mt-1 text-xs text-muted-foreground'>
+                {room.description}
               </p>
-              {hotel.rooms.map((room) => (
-                <div
-                  key={room.id}
-                  className='flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-background p-3'
-                >
-                  <div className='flex-1'>
-                    <h4 className='text-sm font-semibold text-foreground'>
-                      {room.type}
-                    </h4>
-                    <div className='mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground'>
-                      <span className='flex items-center gap-1'>
-                        <Users className='h-3 w-3' />
-                        Up to {room.capacity}
-                      </span>
-                      <span className='flex items-center gap-1'>
-                        <Maximize className='h-3 w-3' />
-                        {room.size} m2
-                      </span>
-                    </div>
-                  </div>
-                  <div className='flex items-center gap-4'>
-                    <div className='text-right'>
-                      <p className='text-lg font-bold text-foreground'>
-                        {room.pricePerNight} kr
-                      </p>
-                      <p className='text-xs text-muted-foreground'>per night</p>
-                    </div>
-                    <Button
-                      size='sm'
-                      className='bg-foreground text-background hover:bg-foreground/90'
-                      onClick={() => {
-                        setSelectedRoom(room);
-                        setShowBooking(true);
-                      }}
-                    >
-                      Select
-                    </Button>
-                  </div>
+            )}
+          </div>
+
+          <div className='flex items-center gap-4'>
+            <div className='text-right'>
+              <p className='text-lg font-bold text-foreground'>
+                {room.pricePerNight} SEK
+                </p>
+                <p className='text-xs text-muted-foreground'>per night</p>
                 </div>
-              ))}
-            </div>  */}
+                
+                <Button
+                size='sm'
+                className='bg-foreground text-background hover:bg-foreground/90'
+                onClick={() => {
+                  setSelectedRoom(room);
+                  setShowBooking(true);
+                }}
+  >
+    Select
+  </Button>
+  </div>
+        </div>
+      ))
+  )}
+</div>
           </div>
         </div>
       </article>
+<Dialog open={showBooking} onOpenChange={setShowBooking}>
+  <DialogContent className='sm:max-w-lg'>
+    <DialogHeader>
+      <DialogTitle className='font-serif text-xl'>
+        Complete Your Reservation
+      </DialogTitle>
+      <DialogDescription>
+        {hotel.name} &middot; {selectedRoom?.name}
+      </DialogDescription>
+    </DialogHeader>
 
-      {/* Bokningsmodul - aktivera när Room-model finns i backend */}
-      {/*  <Dialog open={showBooking} onOpenChange={setShowBooking}>
-        <DialogContent className='sm:max-w-lg'>
-          <DialogHeader>
-            <DialogTitle className='font-serif text-xl'>
-              Complete Your Reservation
-            </DialogTitle>
-            <DialogDescription>
-              {hotel.name} &middot; {{selectedRoom?.type}}
-            </DialogDescription>
-          </DialogHeader>
-
-          {isBooked ? (
-            <div className='flex flex-col items-center gap-3 py-8'>
-              <div className='flex h-14 w-14 items-center justify-center rounded-full bg-foreground'>
-                <Check className='h-7 w-7 text-primary-foreground' />
-              </div>
-              <h3 className='font-serif text-xl font-bold text-foreground'>
-                Booking Confirmed
-              </h3>
-              <p className='text-center text-sm text-muted-foreground'>
-                A confirmation email has been sent to your inbox.
+    {isBooked ? (
+      <div className='flex flex-col items-center gap-3 py-8'>
+        <div className='flex h-14 w-14 items-center justify-center rounded-full bg-foreground'>
+          <Check className='h-7 w-7 text-primary-foreground' />
+        </div>
+        <h3 className='font-serif text-xl font-bold text-foreground'>
+          Booking Confirmed
+        </h3>
+        <p className='text-center text-sm text-muted-foreground'>
+          A confirmation email has been sent to your inbox.
+        </p>
+      </div>
+    ) : (
+      <div className='flex flex-col gap-4'>
+        <div className='rounded-lg bg-secondary p-4'>
+          <div className='flex items-center justify-between'>
+            <div>
+              <p className='text-sm font-semibold text-foreground'>
+                {selectedRoom?.name}
+              </p>
+              <p className='text-xs text-muted-foreground'>
+                {checkIn || 'Select dates'} {' - '} {checkOut || 'Select dates'}
+                {' · '} {guests} {Number(guests) === 1 ? 'guest' : 'guests'}
               </p>
             </div>
-          ) : (
-            <div className='flex flex-col gap-4'>
-              <div className='rounded-lg bg-secondary p-4'>
-                <div className='flex items-center justify-between'>
-                  <div>
-                    <p className='text-sm font-semibold text-foreground'>
-                      {{selectedRoom?.type}}
-                    </p>
-                    <p className='text-xs text-muted-foreground'>
-                      {checkIn || 'Select dates'} {' - '}{' '}
-                      {checkOut || 'Select dates'} &middot; {guests}{' '}
-                      {Number(guests) === 1 ? 'guest' : 'guests'}
-                    </p>
-                  </div>
-                  <div className='text-right'>
-                    <p className='text-lg font-bold text-foreground'>
-                      {(selectedRoom?.pricePerNight ?? 0) * nights} kr
-                    </p>
-                    <p className='text-xs text-muted-foreground'>
-                      {nights} {nights === 1 ? 'night' : 'nights'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className='grid gap-3 sm:grid-cols-2'>
-                <div className='flex flex-col gap-1.5'>
-                  <Label htmlFor='firstName' className='text-xs'>
-                    First Name
-                  </Label>
-                  <Input id='firstName' placeholder='Erik' />
-                </div>
-                <div className='flex flex-col gap-1.5'>
-                  <Label htmlFor='lastName' className='text-xs'>
-                    Last Name
-                  </Label>
-                  <Input id='lastName' placeholder='Svensson' />
-                </div>
-              </div>
-
-              <div className='flex flex-col gap-1.5'>
-                <Label htmlFor='email' className='text-xs'>
-                  Email
-                </Label>
-                <Input id='email' type='email' placeholder='erik@example.com' />
-              </div>
-
-              <div className='flex flex-col gap-1.5'>
-                <Label htmlFor='phone' className='text-xs'>
-                  Phone
-                </Label>
-                <Input id='phone' type='tel' placeholder='+46 70 123 45 67' />
-              </div>
-
-              <Button
-                className='mt-2 w-full bg-foreground text-background hover:bg-foreground/90'
-                onClick={handleBook}
-              >
-                Confirm Reservation
-              </Button>
-
-              <p className='text-center text-xs text-muted-foreground'>
-                Free cancellation up to 48 hours before check-in
+            <div className='text-right'>
+              <p className='text-lg font-bold text-foreground'>
+                {(selectedRoom?.pricePerNight ?? 0) * nights} SEK
+              </p>
+              <p className='text-xs text-muted-foreground'>
+                {nights} {nights === 1 ? 'night' : 'nights'}
               </p>
             </div>
-          )}
-        </DialogContent>
-      </Dialog> */}
+          </div>
+        </div>
+
+        <div className='grid gap-3 sm:grid-cols-2'>
+          <div className='flex flex-col gap-1.5'>
+            <Label htmlFor='firstName' className='text-xs'>
+              First Name
+            </Label>
+            <Input id='firstName' placeholder='Erik' />
+          </div>
+          <div className='flex flex-col gap-1.5'>
+            <Label htmlFor='lastName' className='text-xs'>
+              Last Name
+            </Label>
+            <Input id='lastName' placeholder='Svensson' />
+          </div>
+        </div>
+
+        <div className='flex flex-col gap-1.5'>
+          <Label htmlFor='email' className='text-xs'>
+            Email
+          </Label>
+          <Input id='email' type='email' placeholder='erik@example.com' />
+        </div>
+
+        <div className='flex flex-col gap-1.5'>
+          <Label htmlFor='phone' className='text-xs'>
+            Phone
+          </Label>
+          <Input id='phone' type='tel' placeholder='+46 70 123 45 67' />
+        </div>
+
+        <Button
+          className='mt-2 w-full bg-foreground text-background hover:bg-foreground/90'
+          onClick={handleBook}
+        >
+          Confirm Reservation
+        </Button>
+
+        <p className='text-center text-xs text-muted-foreground'>
+          Free cancellation up to 48 hours before check-in
+        </p>
+      </div>
+    )}
+  </DialogContent>
+</Dialog>
+      
     </>
   );
 }

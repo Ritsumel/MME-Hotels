@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { HotelCard } from '@/components/hotel-card';
-import { getHotels, getCities, type Hotel } from '@/lib/hotel-data';
+import { getHotels, getCities, getRooms, type Hotel, type Room } from '@/lib/hotel-data';
 
 export function BookingContent() {
   const searchParams = useSearchParams();
@@ -26,6 +26,11 @@ export function BookingContent() {
   const [guests, setGuests] = useState(searchParams.get('guests') || '1');
   const [sortBy, setSortBy] = useState('recommended');
   const [hotelList, setHotelList] = useState<Hotel[]>([]);
+  const [roomList, setRoomList] = useState<Room[]>([]);
+
+  useEffect(() => {
+  getRooms().then(setRoomList).catch(console.error);
+}, []);
 
   useEffect(() => {
     getHotels().then(setHotelList);
@@ -173,6 +178,7 @@ export function BookingContent() {
             <HotelCard
               key={hotel.id}
               hotel={hotel}
+              rooms={roomList.filter((room) => room.hotelId === hotel.id)}
               checkIn={checkIn}
               checkOut={checkOut}
               guests={guests}

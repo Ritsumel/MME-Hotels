@@ -39,7 +39,6 @@ export async function getCities(): Promise<City[]> {
   return res.json();
 }
 
-// CRUD (förutom GET)
 export interface CreateCityPayload {
   name: string;
   image: string;
@@ -76,6 +75,29 @@ export interface UpdateHotelPayload {
   reviewCount: number;
   amenities: string;
   cityId: number;
+}
+
+export interface Room {
+  id: number;
+  hotelId: number;
+  name: string;
+  roomType?: string;
+  pricePerNight: number;
+  capacity: number;
+  description?: string;
+  imageUrl?: string;
+  isAvailable: boolean;
+}
+
+export interface CreateRoomPayload {
+  hotelId: number;
+  name: string;
+  roomType?: string;
+  pricePerNight: number;
+  capacity: number;
+  description?: string;
+  imageUrl?: string;
+  isAvailable: boolean;
 }
 
 export async function createCity(payload: CreateCityPayload): Promise<City> {
@@ -160,4 +182,38 @@ export async function deleteHotel(id: number): Promise<void> {
   if (!res.ok) {
     throw new Error(await res.text());
   }
+}
+
+export async function getRooms(): Promise<Room[]> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/rooms`);
+  if (!res.ok) throw new Error("Failed to fetch rooms");
+  return res.json();
+}
+
+export async function getRoomById(id: number): Promise<Room> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/rooms/${id}`);
+  if (!res.ok) throw new Error("Failed to fetch room");
+  return res.json();
+}
+
+export async function getRoomsByHotelId(hotelId: number): Promise<Room[]> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/rooms/hotel/${hotelId}`);
+  if (!res.ok) throw new Error("Failed to fetch rooms for hotel");
+  return res.json();
+}
+
+export async function createRoom(payload: CreateRoomPayload): Promise<Room> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/rooms`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+
+  return res.json();
 }

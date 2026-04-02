@@ -41,7 +41,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { getHotels, type Hotel as HotelType } from '@/lib/hotel-data';
+import { getHotels, deleteHotel, type Hotel as HotelType } from '@/lib/hotel-data';
 
 export function AdminDashboard() {
   const router = useRouter();
@@ -97,78 +97,17 @@ export function AdminDashboard() {
     router.push('/');
   }
 
-  /* handleDeleteHotel — behöver skrivas om när DELETE /api/hotels/{id} finns i backend.
-   Ska skicka delete-request till API istället för att uppdatera local state */
-  /*   function handleDeleteHotel() {
-    if (!deleteTarget) return;
+  async function handleDeleteHotel() {
+  if (!deleteTarget) return;
+
+  try {
+    await deleteHotel(deleteTarget.id);
     setHotelList((prev) => prev.filter((h) => h.id !== deleteTarget.id));
     setDeleteTarget(null);
-  } */
-
-  /* handleAddHotel — behöver skrivas om när POST /api/hotels finns i backend.
-   Ska skicka data till API istället för att uppdatera local state */
-  /*   function handleAddHotel(e: React.FormEvent) {
-    e.preventDefault();
-
-    const hotel: HotelType = {
-      id: newHotel.name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
-      name: newHotel.name,
-      city: newHotel.city,
-      address: newHotel.address,
-      description: newHotel.description,
-      pricePerNight: Number(newHotel.pricePerNight),
-      rating: Number(newHotel.rating) || 4.5,
-      reviewCount: 0,
-      image: '/images/hotel-room.jpg',
-      amenities: newHotel.amenities
-        .split(',')
-        .map((a) => a.trim())
-        .filter(Boolean),
-      rooms: [
-        {
-          id: `${Date.now()}-std`,
-          type: 'Standard Room',
-          description: 'Comfortable room with Nordic design and city views.',
-          pricePerNight: Number(newHotel.pricePerNight),
-          capacity: 2,
-          size: 24,
-          amenities: ['Queen Bed', 'Wi-Fi', 'City View'],
-        },
-        {
-          id: `${Date.now()}-sup`,
-          type: 'Superior Room',
-          description:
-            'Spacious room with lounge area and premium furnishings.',
-          pricePerNight: Math.round(Number(newHotel.pricePerNight) * 1.35),
-          capacity: 2,
-          size: 32,
-          amenities: ['King Bed', 'Lounge Area', 'Nespresso'],
-        },
-        {
-          id: `${Date.now()}-suite`,
-          type: 'Suite',
-          description:
-            'Luxury suite with separate living area and premium amenities.',
-          pricePerNight: Math.round(Number(newHotel.pricePerNight) * 2.2),
-          capacity: 4,
-          size: 50,
-          amenities: ['King Bed', 'Living Room', 'Premium Mini Bar'],
-        },
-      ],
-    };
-
-    setHotelList((prev) => [...prev, hotel]);
-    setNewHotel({
-      name: '',
-      city: '',
-      address: '',
-      description: '',
-      pricePerNight: '',
-      rating: '',
-      amenities: '',
-    });
-    setShowAddDialog(false);
-  } */
+  } catch (error) {
+    console.error('Failed to delete hotel:', error);
+  }
+}
 
   const filteredHotels = hotelList.filter(
     (hotel) =>
@@ -645,7 +584,7 @@ export function AdminDashboard() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              /*  onClick={handleDeleteHotel} */
+              onClick={handleDeleteHotel} 
               className='bg-destructive text-card hover:bg-destructive/90'
             >
               Remove Hotel
