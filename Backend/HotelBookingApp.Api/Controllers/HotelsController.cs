@@ -1,4 +1,5 @@
 ﻿using HotelBookingApp.Api.Data;
+using HotelBookingApp.Api.DTOs;
 using HotelBookingApp.Api.DTOs.Hotels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ public class HotelsController : ControllerBase
     }
 
     [HttpGet]
+<<<<<<< HEAD
     public IActionResult Get([FromQuery] string? slug)
     {
         var query = _context.Hotels
@@ -29,6 +31,23 @@ public class HotelsController : ControllerBase
         }
 
         var hotels = query
+=======
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int? cityId = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var query = _context.Hotels.Include(h => h.City).AsQueryable();
+
+        if (cityId.HasValue)
+            query = query.Where(h => h.CityId == cityId.Value);
+
+        var totalCount = await query.CountAsync();
+
+        var hotels = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+>>>>>>> origin/main
             .Select(h => new HotelDto
             {
                 Id = h.Id,
@@ -43,15 +62,23 @@ public class HotelsController : ControllerBase
                 ReviewCount = h.ReviewCount,
                 Amenities = h.Amenities
             })
-            .ToList();
+            .ToListAsync();
 
-        return Ok(hotels);
+        var result = new PagedResult<HotelDto>
+        {
+            Items = hotels,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
-    public IActionResult GetById(int id)
+    public async Task<IActionResult> GetById(int id)
     {
-        var hotel = _context.Hotels
+        var hotel = await _context.Hotels
             .Include(h => h.City)
             .Where(h => h.Id == id)
             .Select(h => new HotelDto
@@ -68,7 +95,7 @@ public class HotelsController : ControllerBase
                 ReviewCount = h.ReviewCount,
                 Amenities = h.Amenities
             })
-            .FirstOrDefault();
+            .FirstOrDefaultAsync();
 
         if (hotel == null)
             return NotFound();

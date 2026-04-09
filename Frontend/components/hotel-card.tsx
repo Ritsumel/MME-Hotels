@@ -1,10 +1,13 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from "next/link";
 import Image from 'next/image';
 import { Star, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { Hotel, Room } from '@/lib/hotel-data';
+import { createBooking } from '@/lib/hotel-data';
 
 interface HotelCardProps {
   hotel: Hotel;
@@ -21,6 +24,85 @@ export function HotelCard({
   checkOut,
   guests,
 }: HotelCardProps) {
+  const router = useRouter();
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [showBooking, setShowBooking] = useState(false);
+  const [isBooked, setIsBooked] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isBookingLoading, setIsBookingLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+  });
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+
+    setIsLoggedIn(!!token);
+
+    if (token && savedUser) {
+      try {
+        const user = JSON.parse(savedUser);
+
+        const rawName = user.fullName || user.FullName || '';
+        const email = user.email || user.Email || '';
+
+        if (rawName) {
+          const parts = rawName.trim().split(/\s+/);
+          setFormData({
+            firstName: parts[0] || '',
+            lastName: parts.slice(1).join(' ') || '',
+            email: email,
+            phone: '',
+          });
+        } else {
+          setFormData((prev) => ({ ...prev, email: email }));
+        }
+      } catch (e) {
+        console.error('Error parsing user info', e);
+      }
+    }
+  }, [showBooking]);
+
+  const isFormValid =
+    formData.firstName.trim() !== '' &&
+    formData.lastName.trim() !== '' &&
+    formData.email.includes('@') &&
+    checkIn &&
+    checkOut;
+
+  async function handleBook() {
+    if (!isFormValid || !selectedRoom) return;
+
+    setIsBookingLoading(true);
+
+    try {
+      await createBooking({
+        hotelId: hotel.id,
+        roomId: selectedRoom.id,
+        guestName: `${formData.firstName} ${formData.lastName}`,
+        checkIn: checkIn!,
+        checkOut: checkOut!,
+        guests: parseInt(guests),
+      });
+
+      setIsBooked(true);
+      setTimeout(() => {
+        setShowBooking(false);
+        setIsBooked(false);
+        setSelectedRoom(null);
+        setFormData({ firstName: '', lastName: '', email: '', phone: '' });
+      }, 2500);
+    } catch (error: any) {
+      console.error('Booking error:', error);
+      alert(error.message || 'An error occurred during booking.');
+    } finally {
+      setIsBookingLoading(false);
+    }
+  }
 
   const nights =
     checkIn && checkOut
