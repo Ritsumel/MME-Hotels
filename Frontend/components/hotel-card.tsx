@@ -117,7 +117,9 @@ export function HotelCard({
 
   return (
     <>
-      <Link href={`/booking/${hotel.urlSlug}`}>
+      <Link
+        href={`/booking/${hotel.urlSlug}?checkIn=${checkIn}&checkOut=${checkOut}`}
+      >
         <article className='overflow-hidden rounded-xl border border-border bg-card'>
           <div className='grid lg:grid-cols-[320px_1fr]'>
             <div className='relative aspect-4/3 lg:aspect-auto'>

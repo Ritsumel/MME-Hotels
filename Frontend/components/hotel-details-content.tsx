@@ -97,8 +97,9 @@ export function HotelDetailsContent({
   const isFormValid =
     formData.firstName.trim() !== '' &&
     formData.lastName.trim() !== '' &&
-    formData.email.includes('@');
-  checkIn !== '' && checkOut !== '';
+    formData.email.includes('@') &&
+    checkIn !== '' &&
+    checkOut !== '';
 
   async function handleBook() {
     if (!isFormValid || !selectedRoom) return;
@@ -107,9 +108,8 @@ export function HotelDetailsContent({
     try {
       await createBooking({
         hotelId: hotel.id,
-        // Vi skickar med roomId om din backend stödjer det, annars räcker hotelId
         guestName: `${formData.firstName} ${formData.lastName}`,
-        checkIn: checkIn, // Använder datumen från props
+        checkIn: checkIn,
         checkOut: checkOut,
         guests: 1,
         roomId: 0,
@@ -120,7 +120,6 @@ export function HotelDetailsContent({
         setShowBooking(false);
         setIsBooked(false);
         setSelectedRoom(null);
-        // Nollställ inte mailen om de är inloggade, men nollställ vid gästbokning
         if (!isLoggedIn)
           setFormData({ firstName: '', lastName: '', email: '' });
       }, 2500);
@@ -140,7 +139,7 @@ export function HotelDetailsContent({
   ];
 
   return (
-    <div className='mx-auto max-w-7xl px-6 pb-15 pt-28'>
+    <div className='mx-auto max-w-7xl px-6 py-15 '>
       {/* HOTEL INFO */}
       <div className='grid gap-8 lg:grid-cols-2 items-stretch'>
         {/* IMAGE */}
@@ -332,7 +331,6 @@ export function HotelDetailsContent({
         <DialogContent
           className='sm:max-w-lg'
           onOpenAutoFocus={(e) => {
-            // Snygg-fixen vi gjorde innan för att undvika svart markering
             e.preventDefault();
             const input = document.getElementById(
               'firstName',

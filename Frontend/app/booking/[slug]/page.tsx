@@ -8,10 +8,11 @@ import {
   type Room,
 } from '@/lib/hotel-data';
 import { HotelDetailsContent } from '@/components/hotel-details-content';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 
 export default function HotelPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const slug = params.slug as string;
 
   const [hotel, setHotel] = useState<Hotel | null>(null);
@@ -20,18 +21,17 @@ export default function HotelPage() {
 
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [showBooking, setShowBooking] = useState(false);
-  const [isBooked, setIsBooked] = useState(false);
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
 
-  function handleBook() {
-    setIsBooked(true);
-    setTimeout(() => {
-      setShowBooking(false);
-      setIsBooked(false);
-      setSelectedRoom(null);
-    }, 2000);
-  }
+  const urlCheckIn = searchParams.get('checkIn');
+  const urlCheckOut = searchParams.get('checkOut');
+
+  const today = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+  const [checkIn, setCheckIn] = useState(urlCheckIn || today);
+  const [checkOut, setCheckOut] = useState(urlCheckOut || tomorrowStr);
 
   useEffect(() => {
     async function fetchData() {
